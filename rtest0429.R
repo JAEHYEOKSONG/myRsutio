@@ -139,22 +139,24 @@ freq_score
 ggplot(freq_score, aes(x = sentiment, y = n, fill = sentiment)) + geom_col()+ geom_text(aes(label = n), vjust = -0.3) + scale_x_discrete(limits = c("pos","neu","neg"))
 
 
-# -----------------------------새 감정 넣어서 비교 해보는것 
+
+
+# -----------------------------새 감정 넣어서 비교 해보는것 수정 감정사전으로 비교
+# 댓글에 보면 비속어나 별로 보여주고 싶지 않은 감정의 댓글이있습니다.
 score_comment %>% filter(str_detect(review, "미친놈")) %>% select(review)
 score_comment %>% filter(str_detect(review, "그닥")) %>% select(review)
 
-new_word <- tibble(word = c("미친놈","그닥"),polarity = c(-2,-2)) #미친놈과 설치는이라는 단어는 감정사전에 없기때문에
-# 새로운 단어를 추가해줌
+new_word <- tibble(word = c("미친놈","그닥"),polarity = c(-2,-2)) #미친놈과 그닥 이라는 단어는 감정사전에 없기때문에 새로운 단어를 추가해줍니다.
 
-new_word_dic <- bind_rows(dic, new_word) # 추가해주고 
+new_word_dic <- bind_rows(dic, new_word) # 새로운 감정사전을 만들어 추가해주고 
 
-tail(new_word_dic) # 보여줌
+tail(new_word_dic) # 잘 적용되었는지 보여줍니다.
 
 word_comment <- comment2 %>% unnest_tokens(input =review, output = word, token = "words", drop = F) # 단어기준 토큰화
 word_comment %>% select(word, review) #단어기준으로 토큰화 된것과 review내용 출력
 
-
-new_word_comment <- word_comment %>% left_join(new_word_dic, by = "word") %>% mutate(polarity = ifelse(is.na(polarity),0,polarity)) # 새 감정점수 부여
+# 새 감정점수 부여
+new_word_comment <- word_comment %>% left_join(new_word_dic, by = "word") %>% mutate(polarity = ifelse(is.na(polarity),0,polarity))
 new_word_comment %>% select(word, polarity)
 
 new_word_comment <- new_word_comment %>% mutate(sentiment = ifelse(polarity == 2, "pos", ifelse(polarity == -2, "neg", "neu")))
@@ -168,15 +170,15 @@ top10_s <- new_word_comment %>% filter(sentiment != "neu") %>% count(sentiment, 
 top10_s
 
 
-new_score_comment <- word_comment %>% group_by(id, review) %>% summarise(score = sum(polarity)) %>% ungroup()
+# 댓글별 감정 점수를 계산해줍니다. id 값 번호 매긴후 group_by로 묶고 summarise로 여러 요약한것을 보여주고 
+# ungroup함수로 묶인 데이터를 그룹해체후  score review위치 변경후 보여줍니다. 
+new_score_comment <- new_word_comment %>% group_by(id, review) %>% summarise(score = sum(polarity)) %>% ungroup()
 new_score_comment %>% select(score, review)
 
+new_score_comment %>% select(score, review) %>% arrange(-score) #긍정댓글 보여주고
+new_score_comment %>% select(score, review) %>% arrange(score) #부정댓글 보여줍니다.
 
-
-new_score_comment %>% select(score, review) %>% arrange(-score) #긍정
-new_score_comment %>% select(score, review) %>% arrange(score) #부정
-
-new_score_comment %>% count(score) %>% print(n =Inf) # 감정 점수 빈도 구하기기
+new_score_comment %>% count(score) %>% print(n =Inf) # 새 감정 점수 빈도 구하기기
 
 
 new_score_comment <- new_score_comment %>% mutate(sentiment = ifelse(score >= 2, "pos", ifelse(score <= -2, "neg", "neu")))
