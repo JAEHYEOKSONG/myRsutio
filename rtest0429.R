@@ -1,7 +1,6 @@
 library(multilinguer)
 library(textclean)
 library(readr)
-library(plyr)
 library(dplyr)
 library(stringr)
 library(tidytext)
@@ -11,31 +10,35 @@ library(tidyr)
 library(tidygraph)
 library(ggraph)
 library(showtext)
-comment <- read_csv("movie.csv")
+comment <- read_csv("movie.csv") # 리뷰 파일 불러옴
+comment
+
+# 공백을 제거해주고 tibble구조로 변경해준후 단어별로 토큰화를 시켜줍니다.
+comment <- comment %>% str_replace_all("[^가-힣]", " ") %>% str_squish()%>% as_tibble() 
+comment <- comment %>% unnest_tokens(input = review, output = review, token = "words") 
 comment
 
 
-comment <- comment %>% unnest_tokens(input = review, output = review, token = "words") # 단어별로 토큰화 
-comment
-
-
-
-comment_space <- comment %>% count(review, sort = T) # 빈도 높은 단어 추출
-comment_space
-
-comment_space = comment_space %>% filter(str_count(review)>1) # 한글자짜리 다없애고 빈도 보여줌
+# 빈도 높은 단어 추출하여 빈도가 높은 단어를 확인합니다.
+comment_space <- comment %>% count(review, sort = T) 
 comment_space
 
 
+
+# 한글자인 단어를 없애고 빈도를 보여줍니다.
+comment_space = comment_space %>% filter(str_count(review)>1) 
+comment_space
+
+# 빈도가 높은 단어들을 20개 추출한것을 넣어 그래프를 그리기위해 top20 에넣어줍니다.
 top20 <- comment_space %>% head(20)
 top20
 
 
-ggplot(top20, aes(x = reorder(review, n), y = n)) + geom_col() + coord_flip() +
-  geom_text(aes(label = n), hjust = -0.3 ) + labs(title = "영화 리뷰 빈도", x =NULL, y = NULL) +
+ggplot(top20, aes(x = reorder(review, n), y = n, fill="review_word")) + geom_col() + coord_flip() +
+  geom_text(aes(label = n), hjust = -0.3 ) + labs(title = "영화 리뷰 빈도", x =NULL, y = NULL, fill = NULL) +
   theme(title = element_text(size = 20))
-#방향 조절하고 그래프 추출 거리조절하고 x축과 y축 없앰 마지막으로 제목글씨크기
-
+# top 20 단어들을 그래프로 나타내고 방향 조절하고 aes로 거리조절하고 x축과 y축 fill 보여주는것을 
+# NULL값을 넣어 없애주며  텍스트 크기는 20으로 하여 보여줍니다.
 
 
 comment10 <- read_csv("movie.csv") #너의이름은리뷰
