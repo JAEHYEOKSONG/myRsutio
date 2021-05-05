@@ -190,67 +190,57 @@ new_score_comment %>% count(sentiment) %>% mutate(ratio = n/sum(n)*100) # 수정
 
 
 #--------------------------------------------------------5번
-
 comment2 <- read_csv("movie2.csv")
 comment2
+# 띄어쓰기 제거하고 
+movie_comment <- comment2 %>% select(review) %>% mutate(review = str_replace_all(review, "[^가-힣]", " ") , review = str_squish(review), id = row_number())
 
-news_comment <- comment2 %>% select(review) %>% mutate(review = str_replace_all(review, "[^가-R]", " ") , review = str_squish(review), id = row_number())
-comment_pos <- news_comment %>% unnest_tokens(input = review, output = word, token = SimplePos22, drop = F)
+comment_pos <- movie_comment %>% unnest_tokens(input = review, output = word, token = SimplePos22, drop = F)
 comment_pos %>% select(word, review)
+# separate_rows 함수를 사용하여 sep = [+]가 등장할때마다 행을 나눠줌.
 comment_pos <- comment_pos %>% separate_rows(word, sep = "[+]")
+# word, review로 위치 바꿔서 보여줌
 comment_pos %>% select(word, review)
+# filter함수 str_remove 함수를 사용하여 /n와 특수문자들을 제거해줌 그후 다시 mutate함수를 사용하여 word 변수생성하여 넣어줌
 noun <- comment_pos %>% filter(str_detect(word, "/n")) %>% mutate(word = str_remove(word, "/.*$"))
+# word, review로 위치 바꿔서 보여줌
 noun %>% select(word, review)
 noun
 # 어떤 명사가 많이 쓰였는지 확인
 noun %>% count(word, sort = T)
+#동사, 형용사추출,동사 /pv, 형용사 /pa 붙어있는단어추출
 pvpa <- comment_pos %>% filter(str_detect(word, "/pa|/pv")) %>% mutate(word = str_replace(word, "/.*$","다"))
+# 어떤 동사가 많이 쓰였는지 확인 
 pvpa %>% select(word, review)
+# 동사 쓰인 갯수 확인 
 pvpa %>% count(word, sort = T)
-
+# 명사, 동사 두글자 이상의 단어만 남기고 출력해줌
 comment <- bind_rows(noun, pvpa)%>% filter(str_count(word)>=2)%>% arrange(id)
 comment %>% select(word, review)
-
+#pairwise_count함수를 사용하여 그룹 단위 내에서 단어가 동시에 출현한 횟수를 세어줌
 pair <- comment %>% pairwise_count(item = word, feature = id, sort = T)
 pair
-
+# 많이 나온 특정 단어별 조회하기 
 pair %>% filter(item1 == "스토리")
 pair %>% filter(item1 == "영상미")
-
+# n이 1보다 큰경우의 특정 단어들을 골라서  as_tbl_graph() 함수를 사용하여 그래프형식으로 바꿔줌
 graph_comment <- pair %>% filter(n>=2) %>% as_tbl_graph()
 graph_comment
 
-
+# geom_node_point()(노드),geom_edge_link()(엣지)를 통해 네트워크 그래프를 만들어봄
 ggraph(graph_comment) + geom_node_point() + geom_edge_link() + geom_node_text(aes(label = name))
 
 
-
+# 폰트설정하고 
 font_add_google(name = "Nanum Gothic", family = "ng")
 showtext_auto()
-
+# 시드값을 1234로 해줍니다.
 set.seed(1234)
+#위에 동시출현 명사와 동사 네트워크 그래프를 좀더 확실히 보이게 엣지와 
+# 노드색깔 크기 텍스트 위치 설정을 통해 다듬어서 보여줍니다. 
 ggraph(graph_comment, layout = "fr") + geom_edge_link(color = "gray50", alpha = 0.5) + geom_node_point(color = "lightcoral", size = 5) + geom_node_text(aes(label = name), repel = T, size = 5, family = "ng") + theme_graph()
-
-
-word_network <- function(x) {
-  ggraph(x, layout = "fr") +
-    geom_edge_link(color = "gray50", alpha = 0.5) +
-    geom_node_point(color = "lightcoral", size = 5) +
-    geom_node_text(aes(label = name), repel = T, size = 5, family = "ng") +
-    theme_graph()
-}
-
-set.seed(1234)
-word_network(graph_comment)
-
-
-graph_comment <- pair %>% filter(n>=2) %>%
-  as_tbl_graph(directed = F) %>%
-  mutate(centrality = centrality_degree(),
-         group = as.factor(group_infomap()))
-graph_comment
-
-set.seed(1234)
+# 노드 엣지 색깔과 크기 , 사이즈크기를 좀더 다듬어서 좀더 강조된 내용이 높은것을 시각적으로 잘 보이게 
+# 네트워크 그래프를 나타내줍니다.
 ggraph(graph_comment, layout = "fr") +
   geom_edge_link(color = "gray50", alpha = 0.5) +
   geom_node_point(aes(size = centrality,
@@ -268,9 +258,7 @@ ggraph(graph_comment, layout = "fr") +
   theme_graph()
 #================================================처음 네트워크 바이그램
 
-
-
-
+# 다음은 파이계수를 통해 알아보기위해 pairwise_cor함수를 사용하여 두 단어의 파이계수를 구해줍니다.
 word_cors <- comment %>%
   add_count(word) %>%
   filter(n >= 3) %>%
@@ -278,21 +266,21 @@ word_cors <- comment %>%
                feature = id,
                sort = T)
 word_cors
-
+# 상대적으로 어떤단어가 관련성이 크고 자주 사용되었는지 확인함
 word_cors %>% filter(item1 == "사랑")
 word_cors %>% filter(item1 == "모습")
 
-
+# 관심단어 목록추가 하고 
 word_list <- c("사랑","모습","감동","몰입","스토리","영상미")
-
-top8_cors <- word_cors %>% 
+# 파이계수 추출을 5개씩 함 
+top5_cors <- word_cors %>% 
   filter(item1 %in% word_list) %>%
   group_by(item1) %>%
-  slice_max(correlation, n = 8)
-
-top8_cors$item1 <- factor(top8_cors$item1, levels = word_list)
-
-ggplot(top8_cors, aes(x = reorder_within(item2, correlation, item1),
+  slice_max(correlation, n = 5)
+# 그후 factor 함수를 사용하여 범주형 자료를 표현하여 
+top5_cors$item1 <- factor(top5_cors$item1, levels = word_list)
+# 변수의 항목별로 그래프를 나누어서 보여줍니다.
+ggplot(top5_cors, aes(x = reorder_within(item2, correlation, item1),
                       y = correlation,
                       fill = item1)) +
   geom_col(show.legend = F) +
@@ -303,14 +291,9 @@ ggplot(top8_cors, aes(x = reorder_within(item2, correlation, item1),
 
 
 set.seed(1234)
-graph_cors <- word_cors %>%
-  filter(correlation >= 0.3) %>%
-  as_tbl_graph(directed = F) %>%
-  mutate(centrality = centrality_degree(),
-         group = as.factor(group_infomap()))
-
-
-set.seed(1234)
+# 파이 계수로 네트워크 그래프를 보여줍니다.
+# 명암 두께 엣지 단어 사용 된것을 시각적으로 보여주는 scale_size 함수 사용하여 크기 조절하고 
+# 글자 크기등 조절후 네트워크 형식으로 나타내줍니다.
 ggraph(graph_cors, layout = "fr") +
   
   geom_edge_link(color = "gray50",
@@ -324,11 +307,4 @@ ggraph(graph_cors, layout = "fr") +
   scale_size(range = c(5,10)) +
   geom_node_text(aes(label = name), repel = T, size = 5) +
   theme_graph()
-
-
-
 #=================================여기까지 파이계수
-
-
-
-
