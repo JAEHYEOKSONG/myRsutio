@@ -40,65 +40,58 @@ ggplot(top20, aes(x = reorder(review, n), y = n, fill="review_word")) + geom_col
 # top 20 단어들을 그래프로 나타내고 방향 조절하고 aes로 거리조절하고 x축과 y축 fill 보여주는것을 
 # NULL값을 넣어 없애주며  텍스트 크기는 20으로 하여 보여줍니다.
 
-
-comment10 <- read_csv("movie.csv") #너의이름은리뷰
-comment10
-
-
-comment1 <- read_csv("movie2.csv") # 같은 감독에 내용이 이어지는 날씨의아이
-comment1
+comment_name <- read_csv("movie.csv") #너의이름은리뷰
+comment_name
 
 
-weather <- comment1 %>% mutate(movie = "weather") # 날씨의아이 id 를 붙여줌
+comment_weather <- read_csv("movie2.csv") # 같은 감독에 내용이 이어지는 날씨의아이
+comment_weather
+
+
+weather <- comment_weather %>% mutate(movie = "weather") # 날씨의아이 id 를 붙여줍니다.
 weather
 
 
-name <- comment10 %>% mutate(movie = "name") # 너의이름은 id 를 붙여줌
+name <- comment_name %>% mutate(movie = "name") # 너의이름은 id 를 붙여줍니다.
 name
 
 
-bind_speeches <- bind_rows(name, weather) %>% select(movie, review) #bind_row함수 써서 두개 합쳐주고 select 써서 위치 바꿔줌
+bind_speeches <- bind_rows(name, weather) %>% select(movie, review) #bind_row함수 써서 두개 합쳐주고 select 써서 순서 바꿔줍니다.
 bind_speeches
-
+# 단어기준으로 토큰화합니다.
 comment_space <- bind_speeches %>% unnest_tokens(input = review, output = review, token = "words") 
-comment_space # 뛰어쓰기 기준으로 토큰화
+comment_space 
 
-
-comment_space = comment_space %>% filter(str_count(review)>1) # 한글자짜리 다없애고 빈도 보여줌
-comment_space
-
-
-
-freq <- comment_space %>% count(movie, review) %>% filter(str_count(review)>1) # 한문장馨 추출
-freq <- freq %>% group_by(movie) %>% slice_max(n, n=10) # 빈도 높은 단어 추출
+freq <- comment_space %>% count(movie, review) %>% filter(str_count(review)>1) # 한글자 단어 뺴고 추출해줍니다.
+freq <- freq %>% group_by(movie) %>% slice_max(n, n=10) # group_by로 영화 두개를 묶어주고 빈도 높은 단어 추출합니다.
 freq
 
 
 top10 <- freq %>% group_by(movie) %>% slice_max(n, n=10, with_ties=F) # 빈도 동적 제외후 추출 
 top10
 
-
-df_wide <- top10 %>% pivot_wider(names_from = movie, values_from = n) # 
+# pivot_wider을 이용하여 데이터를 재구조 하여 두개의 데이터에 있는 단어와 없는단어를 구분하여 없으면 NA값이 출력되게 합니다.
+df_wide <- top10 %>% pivot_wider(names_from = movie, values_from = n) 
 df_wide
-
+# 그후 NA값은 계산이 불가함으로 전부 0으로 바꿔줍니다.
 df_wide <- top10 %>% pivot_wider(names_from = movie, values_from = n, values_fill = list(n=0))
 df_wide
-
+# 리뷰 빈도를 전부 wide form로 바꾸어줍니다.
 freq_wide <- freq %>% pivot_wider(names_from = movie, values_from = n, values_fill = list(n=0))
 freq_wide
-
+# 각 단어가 리뷰에 차지하는 오즈비를 구해줍니다. (각단어의 빈도/ 모든 단어의 빈도)
 freq_wide <- freq_wide %>% mutate(ratio_name = ((name)/(sum(name))), ratio_weather = ((weather)/(sum(weather))))
 freq_wide
-
+# 빈도 0이나오게되면 0을 나누게 되는 경우가 발생함으로 1을 더해줍니다.
 freq_wide <- freq_wide %>% mutate(ratio_name = ((name)/(sum(name))), ratio_weather = ((weather+1)/(sum(weather+1))))
 freq_wide
-
+# 그후 텍스트 비중을 다른 텍스트의 단어 비중으로 나누어 줍니다.
 freq_wide <- freq_wide %>% mutate(odds_ratio = ratio_name/ratio_weather)
 freq_wide
+# 오즈비 구하는 식대로 대입하여 오즈비를 구합니다.
+freq_wide <- freq_wide %>% mutate(odds_ratio = ((name+1)/sum(weather+1))/((weather+1)/(sum(weather+1))))
+freq_wide
 
-freq_wide %>% arrange(-odds_ratio)
-freq_wide %>% arrange(odds_ratio)
-freq_wide %>% arrange(abs(1-odds_ratio))
 
 #==============================오즈비
 
