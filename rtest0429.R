@@ -15,15 +15,15 @@ comment <- read_csv("movie.csv")
 comment
 
 
-comment <- comment %>% unnest_tokens(input = review, output = review, token = "words") # ´Ü¾îº°·Î ÅäÅ«È­ 
+comment <- comment %>% unnest_tokens(input = review, output = review, token = "words") # ë‹¨ì–´ë³„ë¡œ í† í°í™” 
 comment
 
 
 
-comment_space <- comment %>% count(review, sort = T) # ºóµµ ³ôÀº ´Ü¾î ÃßÃâ
+comment_space <- comment %>% count(review, sort = T) # ë¹ˆë„ ë†’ì€ ë‹¨ì–´ ì¶”ì¶œ
 comment_space
 
-comment_space = comment_space %>% filter(str_count(review)>1) # ÇÑ±ÛÀÚÂ¥¸® ´Ù¾ø¾Ö°í ºóµµ º¸¿©ÁÜ
+comment_space = comment_space %>% filter(str_count(review)>1) # í•œê¸€ìì§œë¦¬ ë‹¤ì—†ì• ê³  ë¹ˆë„ ë³´ì—¬ì¤Œ
 comment_space
 
 
@@ -32,49 +32,48 @@ top20
 
 
 ggplot(top20, aes(x = reorder(review, n), y = n)) + geom_col() + coord_flip() +
-  geom_text(aes(label = n), hjust = -0.3 ) + labs(title = "¿µÈ­ ¸®ºä ºóµµ", x =NULL, y = NULL) +
+  geom_text(aes(label = n), hjust = -0.3 ) + labs(title = "ì˜í™” ë¦¬ë·° ë¹ˆë„", x =NULL, y = NULL) +
   theme(title = element_text(size = 20))
-#¹æÇâ Á¶ÀıÇÏ°í ±×·¡ÇÁ ÃßÃâ °Å¸®Á¶ÀıÇÏ°í xÃà°ú yÃà ¾ø¾Ú ¸¶Áö¸·À¸·Î Á¦¸ñ±Û¾¾Å©±â
+#ë°©í–¥ ì¡°ì ˆí•˜ê³  ê·¸ë˜í”„ ì¶”ì¶œ ê±°ë¦¬ì¡°ì ˆí•˜ê³  xì¶•ê³¼ yì¶• ì—†ì•° ë§ˆì§€ë§‰ìœ¼ë¡œ ì œëª©ê¸€ì”¨í¬ê¸°
 
 
 
-comment10 <- read_csv("movie.csv") #³ÊÀÇÀÌ¸§Àº¸®ºä
+comment10 <- read_csv("movie.csv") #ë„ˆì˜ì´ë¦„ì€ë¦¬ë·°
 comment10
 
 
-comment1 <- read_csv("movie2.csv") # °°Àº °¨µ¶¿¡ ³»¿ëÀÌ ÀÌ¾îÁö´Â ³¯¾¾ÀÇ¾ÆÀÌ
+comment1 <- read_csv("movie2.csv") # ê°™ì€ ê°ë…ì— ë‚´ìš©ì´ ì´ì–´ì§€ëŠ” ë‚ ì”¨ì˜ì•„ì´
 comment1
 
 
-weather <- comment1 %>% mutate(movie = "weather") # ³¯¾¾ÀÇ¾ÆÀÌ id ¸¦ ºÙ¿©ÁÜ
+weather <- comment1 %>% mutate(movie = "weather") # ë‚ ì”¨ì˜ì•„ì´ id ë¥¼ ë¶™ì—¬ì¤Œ
 weather
 
 
-name <- comment10 %>% mutate(movie = "name") # ³ÊÀÇÀÌ¸§Àº id ¸¦ ºÙ¿©ÁÜ
+name <- comment10 %>% mutate(movie = "name") # ë„ˆì˜ì´ë¦„ì€ id ë¥¼ ë¶™ì—¬ì¤Œ
 name
 
 
-bind_speeches <- bind_rows(name, weather) %>% select(movie, review) #bind_rowÇÔ¼ö ½á¼­ µÎ°³ ÇÕÃÄÁÖ°í select ½á¼­ À§Ä¡ ¹Ù²ãÁÜ
+bind_speeches <- bind_rows(name, weather) %>% select(movie, review) #bind_rowí•¨ìˆ˜ ì¨ì„œ ë‘ê°œ í•©ì³ì£¼ê³  select ì¨ì„œ ìœ„ì¹˜ ë°”ê¿”ì¤Œ
 bind_speeches
 
 comment_space <- bind_speeches %>% unnest_tokens(input = review, output = review, token = "words") 
-comment_space # ¶Ù¾î¾²±â ±âÁØÀ¸·Î ÅäÅ«È­
+comment_space # ë›°ì–´ì“°ê¸° ê¸°ì¤€ìœ¼ë¡œ í† í°í™”
 
 
-comment_space = comment_space %>% filter(str_count(review)>1) # ÇÑ±ÛÀÚÂ¥¸® ´Ù¾ø¾Ö°í ºóµµ º¸¿©ÁÜ
+comment_space = comment_space %>% filter(str_count(review)>1) # í•œê¸€ìì§œë¦¬ ë‹¤ì—†ì• ê³  ë¹ˆë„ ë³´ì—¬ì¤Œ
 comment_space
 
 
 
-freq <- comment_space %>% count(movie, review) %>% filter(str_count(review)>1) # ÇÑ¹®Àå•û°í ÃßÃâ
-freq <- freq %>% group_by(movie) %>% slice_max(n, n=10) # ºóµµ ³ôÀº ´Ü¾î ÃßÃâ
+freq <- comment_space %>% count(movie, review) %>% filter(str_count(review)>1) # í•œë¬¸ì¥Â•é¦¨ ì¶”ì¶œ
+freq <- freq %>% group_by(movie) %>% slice_max(n, n=10) # ë¹ˆë„ ë†’ì€ ë‹¨ì–´ ì¶”ì¶œ
 freq
 
 
-top10 <- freq %>% group_by(movie) %>% slice_max(n, n=10, with_ties=F) # ºóµµ µ¿Àû Á¦¿ÜÈÄ ÃßÃâ 
+top10 <- freq %>% group_by(movie) %>% slice_max(n, n=10, with_ties=F) # ë¹ˆë„ ë™ì  ì œì™¸í›„ ì¶”ì¶œ 
 top10
 
-# ÅÚ¸¶ 3¹ø º¸¸é µÊ
 
 df_wide <- top10 %>% pivot_wider(names_from = movie, values_from = n) # 
 df_wide
@@ -98,31 +97,31 @@ freq_wide %>% arrange(-odds_ratio)
 freq_wide %>% arrange(odds_ratio)
 freq_wide %>% arrange(abs(1-odds_ratio))
 
-#==============================¿ÀÁîºñ
+#==============================ì˜¤ì¦ˆë¹„
 
-#-----------------------------------------4 ±îÁö
+#-----------------------------------------4 ê¹Œì§€
 comment2 <- read_csv("movie2.csv")
 comment2
 
 
-comment2 <- comment2 %>% mutate(id =row_number(), review = str_squish(replace_html(review))) #°íÀ¯¹øÈ£ ¸¸µé°í html Æ¯¼ö¹®ÀÚ Á¦°Å
+comment2 <- comment2 %>% mutate(id =row_number(), review = str_squish(replace_html(review))) #ê³ ìœ ë²ˆí˜¸ ë§Œë“¤ê³  html íŠ¹ìˆ˜ë¬¸ì ì œê±°
 glimpse(comment2)
 
-word_comment <- comment2 %>% unnest_tokens(input =review, output = word, token = "words", drop = F) # ´Ü¾î±âÁØ ÅäÅ«È­
-word_comment %>% select(word, review) #´Ü¾î±âÁØÀ¸·Î ÅäÅ«È­ µÈ°Í°ú review³»¿ë Ãâ·Â
+word_comment <- comment2 %>% unnest_tokens(input =review, output = word, token = "words", drop = F) # ë‹¨ì–´ê¸°ì¤€ í† í°í™”
+word_comment %>% select(word, review) #ë‹¨ì–´ê¸°ì¤€ìœ¼ë¡œ í† í°í™” ëœê²ƒê³¼ reviewë‚´ìš© ì¶œë ¥
 
 dic <- read_csv("knu_sentiment_lexicon.csv") 
-word_comment <- word_comment %>% left_join(dic, by = "word") %>% mutate(polarity = ifelse(is.na(polarity),0,polarity)) # °¨Á¤Á¡¼ö ºÎ¿©
+word_comment <- word_comment %>% left_join(dic, by = "word") %>% mutate(polarity = ifelse(is.na(polarity),0,polarity)) # ê°ì •ì ìˆ˜ ë¶€ì—¬
 word_comment %>% select(word, polarity)
 
 
 word_comment <- word_comment %>% mutate(sentiment = ifelse(polarity == 2, "pos", ifelse(polarity == -2, "neg", "neu")))
-# °¨Á¤ ºĞ·ùÇÏ±â 
+# ê°ì • ë¶„ë¥˜í•˜ê¸° 
 new_word_count <- word_comment %>% count(sentiment)
 new_word_count
 
 top10_sentiment <- word_comment %>% filter(sentiment != "neu") %>% count(sentiment, word) %>% group_by(sentiment) %>% slice_max(n, n=10)
-# neg, pos µî ±×Áß »óÀ§ 10°³¸¦ º¸¿©ÁÖ¸ç °¹¼ö¸¦ »õ¾îÁÜ 
+# neg, pos ë“± ê·¸ì¤‘ ìƒìœ„ 10ê°œë¥¼ ë³´ì—¬ì£¼ë©° ê°¯ìˆ˜ë¥¼ ìƒˆì–´ì¤Œ 
 top10_sentiment
 
 
@@ -134,10 +133,10 @@ score_comment %>% select(score, review)
 
 
 
-score_comment %>% select(score, review) %>% arrange(-score) #±àÁ¤
-score_comment %>% select(score, review) %>% arrange(score) #ºÎÁ¤
+score_comment %>% select(score, review) %>% arrange(-score) #ê¸ì •
+score_comment %>% select(score, review) %>% arrange(score) #ë¶€ì •
 
-score_comment %>% count(score) %>% print(n =Inf) # °¨Á¤ Á¡¼ö ºóµµ ±¸ÇÏ±â±â
+score_comment %>% count(score) %>% print(n =Inf) # ê°ì • ì ìˆ˜ ë¹ˆë„ êµ¬í•˜ê¸°ê¸°
 
 
 score_comment <- score_comment %>% mutate(sentiment = ifelse(score >= 1, "pos", ifelse(score <= -1, "neg", "neu")))
@@ -148,32 +147,32 @@ freq_score
 
 ggplot(freq_score, aes(x = sentiment, y = n, fill = sentiment)) + geom_col()+ geom_text(aes(label = n), vjust = -0.3) + scale_x_discrete(limits = c("pos","neu","neg"))
 
-# -----------------------------»õ °¨Á¤ ³Ö¾î¼­ ºñ±³ ÇØº¸´Â°Í 
-score_comment %>% filter(str_detect(review, "¹ÌÄ£³ğ")) %>% select(review)
-score_comment %>% filter(str_detect(review, "±×´Ú")) %>% select(review)
+# -----------------------------ìƒˆ ê°ì • ë„£ì–´ì„œ ë¹„êµ í•´ë³´ëŠ”ê²ƒ 
+score_comment %>% filter(str_detect(review, "ë¯¸ì¹œë†ˆ")) %>% select(review)
+score_comment %>% filter(str_detect(review, "ê·¸ë‹¥")) %>% select(review)
 
-new_word <- tibble(word = c("¹ÌÄ£³ğ","±×´Ú"),polarity = c(-2,-2)) #¹ÌÄ£³ğ°ú ¼³Ä¡´ÂÀÌ¶ó´Â ´Ü¾î´Â °¨Á¤»çÀü¿¡ ¾ø±â¶§¹®¿¡
-# »õ·Î¿î ´Ü¾î¸¦ Ãß°¡ÇØÁÜ
+new_word <- tibble(word = c("ë¯¸ì¹œë†ˆ","ê·¸ë‹¥"),polarity = c(-2,-2)) #ë¯¸ì¹œë†ˆê³¼ ì„¤ì¹˜ëŠ”ì´ë¼ëŠ” ë‹¨ì–´ëŠ” ê°ì •ì‚¬ì „ì— ì—†ê¸°ë•Œë¬¸ì—
+# ìƒˆë¡œìš´ ë‹¨ì–´ë¥¼ ì¶”ê°€í•´ì¤Œ
 
-new_word_dic <- bind_rows(dic, new_word) # Ãß°¡ÇØÁÖ°í 
+new_word_dic <- bind_rows(dic, new_word) # ì¶”ê°€í•´ì£¼ê³  
 
-tail(new_word_dic) # º¸¿©ÁÜ
+tail(new_word_dic) # ë³´ì—¬ì¤Œ
 
-word_comment <- comment2 %>% unnest_tokens(input =review, output = word, token = "words", drop = F) # ´Ü¾î±âÁØ ÅäÅ«È­
-word_comment %>% select(word, review) #´Ü¾î±âÁØÀ¸·Î ÅäÅ«È­ µÈ°Í°ú review³»¿ë Ãâ·Â
+word_comment <- comment2 %>% unnest_tokens(input =review, output = word, token = "words", drop = F) # ë‹¨ì–´ê¸°ì¤€ í† í°í™”
+word_comment %>% select(word, review) #ë‹¨ì–´ê¸°ì¤€ìœ¼ë¡œ í† í°í™” ëœê²ƒê³¼ reviewë‚´ìš© ì¶œë ¥
 
 
-new_word_comment <- word_comment %>% left_join(new_word_dic, by = "word") %>% mutate(polarity = ifelse(is.na(polarity),0,polarity)) # »õ °¨Á¤Á¡¼ö ºÎ¿©
+new_word_comment <- word_comment %>% left_join(new_word_dic, by = "word") %>% mutate(polarity = ifelse(is.na(polarity),0,polarity)) # ìƒˆ ê°ì •ì ìˆ˜ ë¶€ì—¬
 new_word_comment %>% select(word, polarity)
 
 new_word_comment <- new_word_comment %>% mutate(sentiment = ifelse(polarity == 2, "pos", ifelse(polarity == -2, "neg", "neu")))
-# °¨Á¤ ºĞ·ùÇÏ±â 
+# ê°ì • ë¶„ë¥˜í•˜ê¸° 
 new_word_count <- new_word_comment %>% count(sentiment)
 new_word_count
 
 
 top10_s <- new_word_comment %>% filter(sentiment != "neu") %>% count(sentiment, word) %>% group_by(sentiment) %>% slice_max(n, n=10)
-# neg, pos µî ±×Áß »óÀ§ 10°³¸¦ º¸¿©ÁÖ¸ç °¹¼ö¸¦ »õ¾îÁÜ 
+# neg, pos ë“± ê·¸ì¤‘ ìƒìœ„ 10ê°œë¥¼ ë³´ì—¬ì£¼ë©° ê°¯ìˆ˜ë¥¼ ìƒˆì–´ì¤Œ 
 top10_s
 
 
@@ -182,26 +181,26 @@ new_score_comment %>% select(score, review)
 
 
 
-new_score_comment %>% select(score, review) %>% arrange(-score) #±àÁ¤
-new_score_comment %>% select(score, review) %>% arrange(score) #ºÎÁ¤
+new_score_comment %>% select(score, review) %>% arrange(-score) #ê¸ì •
+new_score_comment %>% select(score, review) %>% arrange(score) #ë¶€ì •
 
-new_score_comment %>% count(score) %>% print(n =Inf) # °¨Á¤ Á¡¼ö ºóµµ ±¸ÇÏ±â±â
+new_score_comment %>% count(score) %>% print(n =Inf) # ê°ì • ì ìˆ˜ ë¹ˆë„ êµ¬í•˜ê¸°ê¸°
 
 
 new_score_comment <- new_score_comment %>% mutate(sentiment = ifelse(score >= 2, "pos", ifelse(score <= -2, "neg", "neu")))
 new_score_comment
 
 
-new_score_comment %>% count(sentiment) %>% mutate(ratio = n/sum(n)*100) # ¼öÁ¤µÈ »çÀü
+new_score_comment %>% count(sentiment) %>% mutate(ratio = n/sum(n)*100) # ìˆ˜ì •ëœ ì‚¬ì „
 
 
 
-#--------------------------------------------------------5¹ø
+#--------------------------------------------------------5ë²ˆ
 
 comment2 <- read_csv("movie2.csv")
 comment2
 
-news_comment <- comment2 %>% select(review) %>% mutate(review = str_replace_all(review, "[^°¡-ÆR]", " ") , review = str_squish(review), id = row_number())
+news_comment <- comment2 %>% select(review) %>% mutate(review = str_replace_all(review, "[^ê°€-R]", " ") , review = str_squish(review), id = row_number())
 comment_pos <- news_comment %>% unnest_tokens(input = review, output = word, token = SimplePos22, drop = F)
 comment_pos %>% select(word, review)
 comment_pos <- comment_pos %>% separate_rows(word, sep = "[+]")
@@ -209,9 +208,9 @@ comment_pos %>% select(word, review)
 noun <- comment_pos %>% filter(str_detect(word, "/n")) %>% mutate(word = str_remove(word, "/.*$"))
 noun %>% select(word, review)
 noun
-# ¾î¶² ¸í»ç°¡ ¸¹ÀÌ ¾²¿´´ÂÁö È®ÀÎ
+# ì–´ë–¤ ëª…ì‚¬ê°€ ë§ì´ ì“°ì˜€ëŠ”ì§€ í™•ì¸
 noun %>% count(word, sort = T)
-pvpa <- comment_pos %>% filter(str_detect(word, "/pa|/pv")) %>% mutate(word = str_replace(word, "/.*$","´Ù"))
+pvpa <- comment_pos %>% filter(str_detect(word, "/pa|/pv")) %>% mutate(word = str_replace(word, "/.*$","ë‹¤"))
 pvpa %>% select(word, review)
 pvpa %>% count(word, sort = T)
 
@@ -221,8 +220,8 @@ comment %>% select(word, review)
 pair <- comment %>% pairwise_count(item = word, feature = id, sort = T)
 pair
 
-pair %>% filter(item1 == "½ºÅä¸®")
-pair %>% filter(item1 == "¿µ»ó¹Ì")
+pair %>% filter(item1 == "ìŠ¤í† ë¦¬")
+pair %>% filter(item1 == "ì˜ìƒë¯¸")
 
 graph_comment <- pair %>% filter(n>=2) %>% as_tbl_graph()
 graph_comment
@@ -273,7 +272,7 @@ ggraph(graph_comment, layout = "fr") +
   
   
   theme_graph()
-#================================================Ã³À½ ³×Æ®¿öÅ© ¹ÙÀÌ±×·¥
+#================================================ì²˜ìŒ ë„¤íŠ¸ì›Œí¬ ë°”ì´ê·¸ë¨
 
 
 
@@ -286,11 +285,11 @@ word_cors <- comment %>%
                sort = T)
 word_cors
 
-word_cors %>% filter(item1 == "»ç¶û")
-word_cors %>% filter(item1 == "¸ğ½À")
+word_cors %>% filter(item1 == "ì‚¬ë‘")
+word_cors %>% filter(item1 == "ëª¨ìŠµ")
 
 
-word_list <- c("»ç¶û","¸ğ½À","°¨µ¿","¸ôÀÔ","½ºÅä¸®","¿µ»ó¹Ì")
+word_list <- c("ì‚¬ë‘","ëª¨ìŠµ","ê°ë™","ëª°ì…","ìŠ¤í† ë¦¬","ì˜ìƒë¯¸")
 
 top8_cors <- word_cors %>% 
   filter(item1 %in% word_list) %>%
@@ -334,7 +333,7 @@ ggraph(graph_cors, layout = "fr") +
 
 
 
-#=================================¿©±â±îÁö ÆÄÀÌ°è¼ö
+#=================================ì—¬ê¸°ê¹Œì§€ íŒŒì´ê³„ìˆ˜
 
 
 
