@@ -95,53 +95,49 @@ freq_wide
 
 #==============================오즈비
 
-#-----------------------------------------4 까지
 comment2 <- read_csv("movie2.csv")
 comment2
 
 
 comment2 <- comment2 %>% mutate(id =row_number(), review = str_squish(replace_html(review))) #고유번호 만들고 html 특수문자 제거
-glimpse(comment2)
 
 word_comment <- comment2 %>% unnest_tokens(input =review, output = word, token = "words", drop = F) # 단어기준 토큰화
 word_comment %>% select(word, review) #단어기준으로 토큰화 된것과 review내용 출력
 
-dic <- read_csv("knu_sentiment_lexicon.csv") 
+dic <- read_csv("knu_sentiment_lexicon.csv") # 감정사전을 불러온다.
 word_comment <- word_comment %>% left_join(dic, by = "word") %>% mutate(polarity = ifelse(is.na(polarity),0,polarity)) # 감정점수 부여
 word_comment %>% select(word, polarity)
 
-
+# 감정 분류하고 감정 갯수 확인
 word_comment <- word_comment %>% mutate(sentiment = ifelse(polarity == 2, "pos", ifelse(polarity == -2, "neg", "neu")))
-# 감정 분류하기 
 new_word_count <- word_comment %>% count(sentiment)
 new_word_count
 
+
+# neg, pos 등 그중 상위 10개를 보여주며 갯수를 새어줌
 top10_sentiment <- word_comment %>% filter(sentiment != "neu") %>% count(sentiment, word) %>% group_by(sentiment) %>% slice_max(n, n=10)
-# neg, pos 등 그중 상위 10개를 보여주며 갯수를 새어줌 
 top10_sentiment
 
-
+# 자주 사용된 감정단어를 시각적으로 그래프로 나타내어줌
 ggplot(top10_sentiment, aes(x = reorder(word, n), y = n, fill = sentiment)) + geom_col()+coord_flip() + geom_text(aes(label =n), hjust = -0.5) + facet_wrap(~sentiment, scales ="free")+scale_y_continuous(expand = expansion(mult = c(0.03,0.11))) + labs(x = NULL)
 
-
+# 댓글별 감정 점수를 계산해줍니다. id 값 번호 매긴후 group_by로 묶고 summarise로 여러 요약한것을 보여주고 
+# ungroup함수로 묶인 데이터를 그룹해체후  score review위치 변경후 보여줍니다. 
 score_comment <- word_comment %>% group_by(id, review) %>% summarise(score = sum(polarity)) %>% ungroup()
 score_comment %>% select(score, review)
 
+score_comment %>% select(score, review) %>% arrange(-score) #긍정댓글 보여주고
+score_comment %>% select(score, review) %>% arrange(score) #부정댓글 보여줍니다.
 
+score_comment %>% count(score) %>% print(n =Inf) # 감정 점수 빈도 구해줍니다.
 
-score_comment %>% select(score, review) %>% arrange(-score) #긍정
-score_comment %>% select(score, review) %>% arrange(score) #부정
-
-score_comment %>% count(score) %>% print(n =Inf) # 감정 점수 빈도 구하기기
-
-
-score_comment <- score_comment %>% mutate(sentiment = ifelse(score >= 1, "pos", ifelse(score <= -1, "neg", "neu")))
-score_comment
-
+# 감정을 분류한뒤 긍정적인 댓글과 부정적인 댓글이 많은지 감정 경향을 살펴봅니다.
+score_comment <- score_comment %>% mutate(sentiment = ifelse(score >= 1, "pos", ifelse(score <= -1, "neg", "neu"))) 
 freq_score <-score_comment %>% count(sentiment) %>% mutate(ratio = n/sum(n)*100)
 freq_score
-
+# 그후 감정 경향을 시각적으로 ggplot 을 통하여 그래프로 보여줍니다.
 ggplot(freq_score, aes(x = sentiment, y = n, fill = sentiment)) + geom_col()+ geom_text(aes(label = n), vjust = -0.3) + scale_x_discrete(limits = c("pos","neu","neg"))
+
 
 # -----------------------------새 감정 넣어서 비교 해보는것 
 score_comment %>% filter(str_detect(review, "미친놈")) %>% select(review)
